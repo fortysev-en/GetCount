@@ -8,6 +8,8 @@ count = 0
 link_name = []
 all_links = []
 total_dic = {}
+last_count = {}
+last_counts = []
 
 
 def input_data():
@@ -31,7 +33,6 @@ def input_data():
             #check if the file is empty, if yes, then pass
             if os.stat("total_db.json").st_size != 0:
                 total_dic.update(json.load(infile))
-                print(total_dic)
             else:
                 pass
 
@@ -40,7 +41,7 @@ def input_data():
         res = {link_name[i]: all_links[i] for i in range(len(link_name))}
         total_dic.update(res)
 
-        # wtite the file with updated data
+        # write the file with updated data
         with open("total_db.json", "w") as outfile:
             json.dump(total_dic, outfile)
 
@@ -73,6 +74,16 @@ def input_data():
 def view_data():
     total_dic.clear()
     global count
+
+    if not os.path.exists('total.json'):
+        open("total.json", "w")
+
+    with open("total.json", encoding="utf8") as inf:
+        if os.stat("total.json").st_size != 0:
+            last_count.update(json.load(inf))
+        else:
+            pass
+
     with open("total_db.json", encoding="utf8") as infile:
         # check if the file is empty, if yes, then pass
         if os.stat("total_db.json").st_size != 0:
@@ -87,13 +98,22 @@ def view_data():
             link_name.append(key)
         for value in dict(total_dic).values():
             all_links.append(value)
-        for items in all_links:
-            file = urllib.request.urlopen(items)
+        for value in dict(last_count).values():
+            last_counts.append(value)
+        for value in all_links:
+            file = urllib.request.urlopen(value)
             for line in file:
                 decoded_line = line.decode("utf-8")
-                print(link_name[count] + ":\t" + decoded_line[9:-1])
-                print("*************************")
+                current_count = decoded_line[9:-1]
+                if len(last_counts) == 0:
+                    print(link_name[count] + ":\t" + current_count)
+                if not len(last_counts) == 0:
+                    print(link_name[count] + ":\t" + last_counts[count] + "\t" + current_count)
+                res2 = {link_name[count]: current_count}
+                last_count.update(res2)
                 count += 1
+    with open("total.json", "w") as outfile:
+        json.dump(last_count, outfile)
 
 
 def choice():
